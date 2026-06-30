@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Delete, Fingerprint, ShieldCheck, X } from "lucide-react";
+import { Delete, ShieldCheck, X } from "lucide-react";
 import { hashPassword } from "@/lib/data";
 
-const PIN_KEY       = "wf_pin";
-const BIOMETRIC_KEY = "wf_biometric_cred";
+const PIN_KEY = "wf_pin";
 
 function PinDots({ length, shake }: { length: number; shake: boolean }) {
   return (
@@ -78,32 +77,20 @@ export default function PinModal({
   onSuccess,
   onCancel,
 }: PinModalProps) {
-  const [pin, setPin]           = useState("");
-  const [shake, setShake]       = useState(false);
+  const [pin, setPin]             = useState("");
+  const [shake, setShake]         = useState(false);
   const [verifying, setVerifying] = useState(false);
-  const [error, setError]       = useState("");
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricRegistered, setBiometricRegistered] = useState(false);
+  const [error, setError]         = useState("");
 
-  // Reset state whenever modal opens/closes
+  // Reset whenever modal opens or closes
   useEffect(() => {
     if (!isOpen) {
       setPin("");
       setError("");
       setShake(false);
       setVerifying(false);
-    } else {
-      setBiometricRegistered(!!localStorage.getItem(BIOMETRIC_KEY));
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.PublicKeyCredential) {
-      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-        .then(setBiometricAvailable)
-        .catch(() => {});
-    }
-  }, []);
 
   const handleKey = useCallback((k: string) => {
     if (verifying) return;
@@ -140,32 +127,12 @@ export default function PinModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pin]);
 
-  const tryBiometric = async () => {
-    const credIdStr = localStorage.getItem(BIOMETRIC_KEY);
-    if (!credIdStr) return;
-    try {
-      const credIdBytes = Uint8Array.from(atob(credIdStr), (c) => c.charCodeAt(0));
-      const assertion = await navigator.credentials.get({
-        publicKey: {
-          challenge: crypto.getRandomValues(new Uint8Array(32)),
-          allowCredentials: [{ id: credIdBytes, type: "public-key" }],
-          userVerification: "required",
-          timeout: 60000,
-        },
-      });
-      if (assertion) onSuccess();
-    } catch { /* cancelled */ }
-  };
-
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onCancel}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
 
       {/* Bottom sheet */}
       <div className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-lift animate-slide-up">
@@ -174,7 +141,7 @@ export default function PinModal({
           <div className="h-1 w-10 rounded-full bg-[#E6E8EB]" />
         </div>
 
-        {/* Close button */}
+        {/* Close */}
         <button
           onClick={onCancel}
           aria-label="Cancel"
@@ -202,17 +169,6 @@ export default function PinModal({
           <div className="mt-6 w-full">
             <PinPad onKey={handleKey} onBackspace={handleBackspace} disabled={verifying} />
           </div>
-
-          {biometricAvailable && biometricRegistered && (
-            <button
-              type="button"
-              onClick={tryBiometric}
-              className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-[#D71E28] hover:underline"
-            >
-              <Fingerprint size={18} />
-              Use fingerprint / Face ID instead
-            </button>
-          )}
         </div>
       </div>
     </div>
