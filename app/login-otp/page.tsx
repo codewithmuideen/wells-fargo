@@ -69,7 +69,12 @@ function LoginOtpInner() {
         setVerified(true);
         signInById(userInternalId);
         window.setTimeout(() => {
-          router.replace("/dashboard");
+          try {
+            const hasPin = localStorage.getItem("wf_pin");
+            router.replace(hasPin ? "/dashboard" : "/setup-pin");
+          } catch {
+            router.replace("/dashboard");
+          }
         }, 1500);
       } catch {
         setVerifying(false);

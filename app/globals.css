@@ -6,7 +6,8 @@
   --color-wf-gold: #FFBF00;
   --color-wf-ink: #2D2926;
   --color-wf-gray: #6D6E71;
-  --color-wf-surface: #F5F5F5;
+  --color-wf-surface: #EAECF5;
+  --color-wf-lavender: #EAECF5;
   --color-wf-line: #E6E8EB;
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
 
@@ -16,7 +17,7 @@
 }
 
 :root {
-  --background: #F5F5F5;
+  --background: #EAECF5;
   --foreground: #2D2926;
 }
 
@@ -115,3 +116,103 @@ body {
 .animate-splash-out {
   animation: splash-out 0.5s ease-in both;
 }
+
+/* Splash stage exit — slides + fades left */
+@keyframes stage-exit {
+  0% { transform: translateX(0) scale(1); opacity: 1; }
+  100% { transform: translateX(-8%) scale(0.97); opacity: 0; }
+}
+.animate-stage-exit {
+  animation: stage-exit 0.45s cubic-bezier(.4,0,.6,1) forwards;
+}
+
+/* Splash stage enter — slides + fades in from right */
+@keyframes stage-enter {
+  0% { transform: translateX(8%) scale(0.97); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+.animate-stage-enter {
+  animation: stage-enter 0.5s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* Logo slides up from bottom with spring */
+@keyframes logo-rise {
+  0% { transform: translateY(56px) scale(0.78); opacity: 0; }
+  55% { transform: translateY(-6px) scale(1.04); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.animate-logo-rise {
+  animation: logo-rise 1.1s cubic-bezier(.2,.8,.2,1) both;
+}
+
+/* Text fades up (staggered via delay) */
+@keyframes fade-up {
+  0% { transform: translateY(18px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.animate-fade-up { animation: fade-up 0.7s cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-up-d1 { animation: fade-up 0.7s 0.18s cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-up-d2 { animation: fade-up 0.7s 0.34s cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-up-d3 { animation: fade-up 0.7s 0.5s cubic-bezier(.2,.8,.2,1) both; }
+.animate-fade-up-d4 { animation: fade-up 0.7s 0.66s cubic-bezier(.2,.8,.2,1) both; }
+
+/* Shimmer sweep (loading bar) */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.animate-shimmer { animation: shimmer 1.6s ease-in-out infinite; }
+
+/* Stage 2 feature card pop */
+@keyframes card-pop {
+  0% { transform: scale(0.88) translateY(12px); opacity: 0; }
+  70% { transform: scale(1.03) translateY(-2px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-card-pop { animation: card-pop 0.5s cubic-bezier(.2,.8,.2,1) both; }
+.animate-card-pop-d1 { animation: card-pop 0.5s 0.1s cubic-bezier(.2,.8,.2,1) both; }
+.animate-card-pop-d2 { animation: card-pop 0.5s 0.2s cubic-bezier(.2,.8,.2,1) both; }
+.animate-card-pop-d3 { animation: card-pop 0.5s 0.3s cubic-bezier(.2,.8,.2,1) both; }
+
+/* PIN dot fill animation */
+@keyframes dot-fill {
+  0% { transform: scale(0.4); opacity: 0.3; }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-dot-fill { animation: dot-fill 0.22s cubic-bezier(.2,.8,.2,1) both; }
+
+/* PIN keypad key press */
+@keyframes key-press {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.9); background-color: rgba(215,30,40,0.12); }
+  100% { transform: scale(1); }
+}
+.animate-key-press { animation: key-press 0.18s ease-out; }
+
+/* PIN wrong — shake */
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  14% { transform: translateX(-10px); }
+  28% { transform: translateX(10px); }
+  42% { transform: translateX(-8px); }
+  57% { transform: translateX(8px); }
+  71% { transform: translateX(-4px); }
+  85% { transform: translateX(4px); }
+}
+.animate-pin-shake { animation: pin-shake 0.52s cubic-bezier(.36,.07,.19,.97) both; }
+
+/* Ambient glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.18; transform: scale(1); }
+  50% { opacity: 0.32; transform: scale(1.08); }
+}
+.animate-glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
+
+/* Avatar pop on stage 3 */
+@keyframes avatar-pop {
+  0% { transform: scale(0.6) translateY(20px); opacity: 0; }
+  65% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+.animate-avatar-pop { animation: avatar-pop 0.6s 0.1s cubic-bezier(.2,.8,.2,1) both; }

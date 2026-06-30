@@ -10,6 +10,7 @@ import {
   Send,
   TrendingUp,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/AppShell";
 import BalanceCard from "@/components/BalanceCard";
 import TransactionRow from "@/components/TransactionRow";
@@ -20,12 +21,14 @@ import {
   getTransactionsForStatement,
 } from "@/lib/generate-statement-pdf";
 
-const greeting = () => {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
-};
+function useGreeting() {
+  const [text, setText] = useState("Welcome");
+  useEffect(() => {
+    const h = new Date().getHours();
+    setText(h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening");
+  }, []);
+  return text;
+}
 
 const quickActions = [
   { label: "Transfer", href: "/transfer", icon: ArrowLeftRight },
@@ -44,6 +47,7 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user } = useAuth();
+  const greeting = useGreeting();
   if (!user) return null;
   const allTransactions = getTransactions(user.transactionKey);
   const transactions = allTransactions.slice(0, 10);
@@ -51,9 +55,10 @@ function DashboardContent() {
 
   return (
     <div className="p-4 sm:p-6 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#2D2926]">
-          {greeting()}, {user.firstName}
+      <div className="mb-5">
+        <p className="text-[13px] font-medium text-[#6D6E71]">{greeting},</p>
+        <h1 className="text-[26px] sm:text-[30px] font-bold text-[#2D2926] leading-tight">
+          {user.firstName} {user.lastName}
         </h1>
       </div>
 

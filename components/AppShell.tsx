@@ -13,7 +13,6 @@ import {
   Bell,
   Search,
   ArrowLeft,
-  Shield,
   X,
   UserCircle2,
   FileText,
@@ -52,7 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5]">
+      <div className="min-h-screen flex items-center justify-center bg-[#EAECF5]">
         <div className="h-10 w-10 border-4 border-[#D71E28] border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -66,43 +65,49 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F5]">
+    <div className="min-h-screen flex flex-col bg-[#EAECF5]">
       {/* Top bar */}
       <header className="sticky top-0 z-40 bg-white border-b border-[#E6E8EB]">
-        <div className="px-4 sm:px-6 h-16 flex items-center justify-between gap-3 max-w-5xl mx-auto w-full">
+        <div className="px-4 sm:px-6 h-[60px] flex items-center justify-between gap-3 max-w-5xl mx-auto w-full">
+          {/* Left: back or Ask Fargo */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
             {isInner && (
               <button
                 onClick={() => router.back()}
                 aria-label="Go back"
-                className="h-9 w-9 -ml-1 inline-flex items-center justify-center rounded-full hover:bg-[#F5F5F5] text-[#2D2926] shrink-0"
+                className="h-9 w-9 -ml-1 inline-flex items-center justify-center rounded-full hover:bg-[#EAECF5] text-[#2D2926] shrink-0 transition"
               >
                 <ArrowLeft size={20} />
               </button>
             )}
             <Link
               href="/transactions"
-              className="flex items-center gap-2 px-3 h-9 rounded-full bg-[#F5F5F5] text-[#6D6E71] text-sm hover:bg-[#ececec] transition min-w-0 max-w-[200px]"
+              className="flex items-center gap-2 px-3.5 h-9 rounded-full bg-[#F2F4FA] text-[#6D6E71] text-[13px] font-medium hover:bg-[#E8EAEF] transition min-w-0 max-w-[220px]"
             >
-              <Search size={16} className="shrink-0" />
+              <Search size={15} className="shrink-0 text-[#9AA0A6]" />
               <span className="truncate">Ask Fargo</span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            <div className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-[#D71E28] text-white">
-              <Shield size={18} />
-            </div>
+          {/* Right: notification badge + bell + sign off */}
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+            {/* Bell with numbered red badge */}
             <button
-              aria-label="Notifications"
-              className="h-9 w-9 inline-flex items-center justify-center rounded-full hover:bg-[#F5F5F5] text-[#2D2926] relative"
+              aria-label="Notifications (3 unread)"
+              className="relative h-9 w-9 inline-flex items-center justify-center rounded-full hover:bg-[#EAECF5] text-[#2D2926] transition"
             >
-              <Bell size={18} />
-              <span className="absolute top-1.5 right-2 h-2 w-2 rounded-full bg-[#D71E28]" />
+              <Bell size={20} />
+              <span className="absolute top-1 right-1 h-[18px] min-w-[18px] px-1 flex items-center justify-center rounded-full bg-[#D71E28] text-white text-[10px] font-bold leading-none">
+                3
+              </span>
             </button>
+
+            {/* Divider */}
+            <div className="h-5 w-px bg-[#E6E8EB] mx-0.5" />
+
             <button
               onClick={handleSignOut}
-              className="text-sm font-semibold text-[#D71E28] hover:underline px-2"
+              className="text-[13px] font-semibold text-[#D71E28] hover:underline px-2 py-1"
             >
               Sign off
             </button>
@@ -124,9 +129,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="fixed bottom-0 inset-x-0 z-50 bg-white rounded-t-3xl shadow-lift animate-slide-up max-w-lg mx-auto">
             <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-[#E6E8EB]">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-11 w-11 rounded-full bg-[#D71E28] text-white flex items-center justify-center font-bold text-sm shrink-0">
-                  {(user.firstName[0] ?? "") + (user.lastName[0] ?? "")}
-                </div>
+                {user.avatar ? (
+                  <Image
+                    src={user.avatar}
+                    alt={user.firstName}
+                    width={44}
+                    height={44}
+                    className="h-11 w-11 rounded-full object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="h-11 w-11 rounded-full bg-[#D71E28] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                    {(user.firstName[0] ?? "") + (user.lastName[0] ?? "")}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="font-semibold text-[#2D2926] truncate">
                     {user.firstName} {user.lastName}
@@ -137,7 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <button
                 onClick={() => setMenuOpen(false)}
                 aria-label="Close menu"
-                className="h-9 w-9 rounded-full hover:bg-[#F5F5F5] inline-flex items-center justify-center text-[#6D6E71]"
+                className="h-9 w-9 rounded-full hover:bg-[#EAECF5] inline-flex items-center justify-center text-[#6D6E71] transition"
               >
                 <X size={20} />
               </button>
@@ -150,7 +165,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     key={m.label}
                     href={m.href}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium text-[#2D2926] hover:bg-[#F5F5F5]"
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-medium text-[#2D2926] hover:bg-[#EAECF5] transition"
                   >
                     <span className="h-9 w-9 rounded-lg bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center">
                       <Icon size={18} />
@@ -161,7 +176,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               })}
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-semibold text-[#D71E28] hover:bg-[#D71E28]/5 mt-1"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[15px] font-semibold text-[#D71E28] hover:bg-[#D71E28]/5 mt-1 transition"
               >
                 <span className="h-9 w-9 rounded-lg bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center">
                   <LogOut size={18} />
