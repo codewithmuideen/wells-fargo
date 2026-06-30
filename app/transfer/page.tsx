@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import Button from "@/components/Button";
+import PinModal from "@/components/PinModal";
 import { useAuth } from "@/lib/auth";
 import { formatCurrency, formatDate, getScheduledPayments } from "@/lib/data";
 
@@ -138,6 +139,7 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
   const [amount, setAmount]       = useState("");
   const [memo, setMemo]           = useState("");
   const [step, setStep]           = useState<"form" | "review" | "done">("form");
+  const [showPin, setShowPin]     = useState(false);
   const refNum = `ZEL${Date.now().toString().slice(-8)}`;
 
   if (step === "done") {
@@ -169,37 +171,46 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
 
   if (step === "review") {
     return (
-      <div className="space-y-4">
-        <h3 className="text-base font-bold text-[#2D2926]">Review your payment</h3>
-        <div className="bg-[#FAFAFA] rounded-2xl border border-[#E6E8EB] divide-y divide-[#E6E8EB] text-sm">
-          {[
-            ["Send to",  recipient],
-            ["Amount",   formatCurrency(parseFloat(amount) || 0)],
-            ["From",     fromAccount],
-            ["Method",   "Zelle®"],
-            ["Delivers", "Within minutes"],
-            ["Memo",     memo || "—"],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between px-4 py-3">
-              <span className="text-[#6D6E71]">{k}</span>
-              <span className="font-semibold text-[#2D2926] text-right max-w-[55%]">{v}</span>
-            </div>
-          ))}
+      <>
+        <div className="space-y-4">
+          <h3 className="text-base font-bold text-[#2D2926]">Review your payment</h3>
+          <div className="bg-[#FAFAFA] rounded-2xl border border-[#E6E8EB] divide-y divide-[#E6E8EB] text-sm">
+            {[
+              ["Send to",  recipient],
+              ["Amount",   formatCurrency(parseFloat(amount) || 0)],
+              ["From",     fromAccount],
+              ["Method",   "Zelle®"],
+              ["Delivers", "Within minutes"],
+              ["Memo",     memo || "—"],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between px-4 py-3">
+                <span className="text-[#6D6E71]">{k}</span>
+                <span className="font-semibold text-[#2D2926] text-right max-w-[55%]">{v}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-[#9AA0A6] leading-relaxed">
+            By tapping Send, you authorize Wells Fargo to initiate a Zelle® payment. Money sent with Zelle® typically arrives within minutes and is usually not reversible.
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => setStep("form")}
+              className="flex-1 py-3 rounded-xl border border-[#E6E8EB] text-sm font-semibold text-[#2D2926] hover:bg-[#F5F5F5] transition">
+              Edit
+            </button>
+            <button onClick={() => setShowPin(true)}
+              className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
+              Send ${amount || "0.00"}
+            </button>
+          </div>
         </div>
-        <p className="text-[11px] text-[#9AA0A6] leading-relaxed">
-          By tapping Send, you authorize Wells Fargo to initiate a Zelle® payment. Money sent with Zelle® typically arrives within minutes and is usually not reversible.
-        </p>
-        <div className="flex gap-3">
-          <button onClick={() => setStep("form")}
-            className="flex-1 py-3 rounded-xl border border-[#E6E8EB] text-sm font-semibold text-[#2D2926] hover:bg-[#F5F5F5] transition">
-            Edit
-          </button>
-          <button onClick={() => setStep("done")}
-            className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
-            Send ${amount || "0.00"}
-          </button>
-        </div>
-      </div>
+        <PinModal
+          isOpen={showPin}
+          title="Confirm Zelle® Payment"
+          subtitle={`Authorize sending ${formatCurrency(parseFloat(amount) || 0)} to ${recipient}`}
+          onSuccess={() => { setShowPin(false); setStep("done"); }}
+          onCancel={() => setShowPin(false)}
+        />
+      </>
     );
   }
 
@@ -241,6 +252,7 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
   const [amount,       setAmount]       = useState("");
   const [memo,         setMemo]         = useState("");
   const [step,         setStep]         = useState<"form" | "review" | "done">("form");
+  const [showPin,      setShowPin]      = useState(false);
   const refNum = `ACH${Date.now().toString().slice(-9)}`;
 
   if (step === "done") {
@@ -297,10 +309,17 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
           <button onClick={() => setStep("form")} className="flex-1 py-3 rounded-xl border border-[#E6E8EB] text-sm font-semibold text-[#2D2926] hover:bg-[#F5F5F5] transition">
             Edit
           </button>
-          <button onClick={() => setStep("done")} className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
+          <button onClick={() => setShowPin(true)} className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
             Confirm Transfer
           </button>
         </div>
+        <PinModal
+          isOpen={showPin}
+          title="Confirm Bank Transfer"
+          subtitle={`Authorize ${formatCurrency(parseFloat(amount) || 0)} ACH transfer to ${firstName} ${lastName}`}
+          onSuccess={() => { setShowPin(false); setStep("done"); }}
+          onCancel={() => setShowPin(false)}
+        />
       </div>
     );
   }
@@ -366,6 +385,7 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
   const [amount,      setAmount]      = useState("");
   const [purpose,     setPurpose]     = useState(WIRE_PURPOSES[0]);
   const [step,        setStep]        = useState<"form" | "review" | "done">("form");
+  const [showPin,     setShowPin]     = useState(false);
   const refNum = `WRE${Date.now().toString().slice(-9)}`;
 
   if (step === "done") {
@@ -427,10 +447,17 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
           <button onClick={() => setStep("form")} className="flex-1 py-3 rounded-xl border border-[#E6E8EB] text-sm font-semibold text-[#2D2926] hover:bg-[#F5F5F5] transition">
             Edit
           </button>
-          <button onClick={() => setStep("done")} className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
+          <button onClick={() => setShowPin(true)} className="flex-1 py-3 rounded-xl bg-[#D71E28] text-sm font-bold text-white hover:bg-[#A01B22] transition shadow-soft">
             Confirm Wire
           </button>
         </div>
+        <PinModal
+          isOpen={showPin}
+          title="Confirm Wire Transfer"
+          subtitle={`Authorize ${formatCurrency(parseFloat(amount) || 0)} wire to ${recipName}`}
+          onSuccess={() => { setShowPin(false); setStep("done"); }}
+          onCancel={() => setShowPin(false)}
+        />
       </div>
     );
   }
