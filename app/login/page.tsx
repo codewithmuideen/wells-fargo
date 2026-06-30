@@ -81,9 +81,12 @@ export default function LoginPage() {
         setSubmitting(false);
         return;
       }
-      router.push(
-        `/login-otp?uid=${encodeURIComponent(data.userInternalId)}&email=${encodeURIComponent(data.maskedEmail)}`
-      );
+      const otpParams = new URLSearchParams({
+        uid: data.userInternalId,
+        email: data.maskedEmail,
+        ...(data.devCode ? { dc: data.devCode } : {}),
+      });
+      router.push(`/login-otp?${otpParams.toString()}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);

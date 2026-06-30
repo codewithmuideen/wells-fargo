@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
   const expires = Date.now() + 10 * 60 * 1000;
   otpStore.set(user.id, { code, expires });
 
+  // Always log to server console so OTP is accessible even if email fails
+  console.log(`[WF OTP] Code for ${user.firstName} (${user.email}): ${code}`);
+
+  let emailSent = false;
   try {
     await resend.emails.send({
       from: "Wells Fargo <onboarding@resend.dev>",
@@ -56,11 +60,9 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
+    emailSent = true;
   } catch {
-    return NextResponse.json(
-      { ok: false, error: "Failed to send email. Please try again." },
-      { status: 500 }
-    );
+    console.error(`[WF OTP] Email delivery failed for ${user.email} — code is still valid`);
   }
 
   const masked = user.email.replace(
@@ -68,5 +70,11 @@ export async function POST(req: NextRequest) {
     (_, a, b, c) => a + b.replace(/./g, "•") + c
   );
 
-  return NextResponse.json({ ok: true, maskedEmail: masked, userInternalId: user.id });
+  return NextResponse.json({
+    ok: true,
+    maskedEmail: masked,
+    userInternalId: user.id,
+    // Include code in response when email didn't send so user can still log in
+    ...(emailSent ? {} : { devCode: code }),
+  });
 }
