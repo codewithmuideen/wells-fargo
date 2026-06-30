@@ -112,7 +112,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(() => {
     setUser(null);
     try {
-      localStorage.removeItem(SESSION_KEY);
+      // Keep wf_session if PIN is set — splash Stage 3 will handle auth on next launch.
+      // Only wipe the session when there's no PIN (user goes straight to login).
+      const hasPin = localStorage.getItem("wf_pin");
+      if (!hasPin) {
+        localStorage.removeItem(SESSION_KEY);
+      }
     } catch {
       // ignore
     }
