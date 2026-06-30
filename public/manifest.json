@@ -1,0 +1,38 @@
+{
+  "name": "Wells Fargo",
+  "short_name": "Wells Fargo",
+  "description": "Wells Fargo Mobile banking — manage accounts, deposit checks, and pay bills.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#D71E28",
+  "theme_color": "#D71E28",
+  "id": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon_2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon_2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon_2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
