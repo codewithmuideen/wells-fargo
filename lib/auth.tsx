@@ -5,7 +5,8 @@ import { hashPassword, PREDEFINED_USERS, type UserRecord } from "./data";
 
 export type PublicUser = Omit<UserRecord, "passwordHash">;
 
-const SESSION_KEY = "wf_session";
+const SESSION_KEY   = "wf_session";
+const LAST_USER_KEY = "wf_last_user";
 
 const stripHash = (u: UserRecord): PublicUser => {
   const { passwordHash: _omit, ...rest } = u;
@@ -103,6 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(u);
     try {
       localStorage.setItem(SESSION_KEY, u.id);
+      localStorage.setItem(LAST_USER_KEY, u.id); // persists across sign-outs for PIN screen
     } catch {
       // ignore
     }
@@ -112,12 +114,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(() => {
     setUser(null);
     try {
-      // Keep wf_session if PIN is set — splash Stage 3 will handle auth on next launch.
-      // Only wipe the session when there's no PIN (user goes straight to login).
-      const hasPin = localStorage.getItem("wf_pin");
-      if (!hasPin) {
-        localStorage.removeItem(SESSION_KEY);
-      }
+      localStorage.removeItem(SESSION_KEY);
+      // wf_last_user intentionally NOT removed — splash uses it to show the PIN screen
     } catch {
       // ignore
     }

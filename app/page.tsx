@@ -13,8 +13,9 @@ const STAGE1_MS = 2800;
 const STAGE2_MS = 3000;
 const TRANSITION_MS = 450;
 
-const PIN_KEY = "wf_pin";
-const SESSION_KEY = "wf_session";
+const PIN_KEY       = "wf_pin";
+const SESSION_KEY   = "wf_session";
+const LAST_USER_KEY = "wf_last_user";
 
 function PinDots({ length, shake }: { length: number; shake: boolean }) {
   return (
@@ -108,13 +109,13 @@ export default function SplashPage() {
   // Prevent SSR/CSR hydration mismatch — render nothing until mounted
   useEffect(() => { setMounted(true); }, []);
 
-  // Check for saved session+PIN on mount
+  // Check for saved last-user + PIN on mount (drives Stage 3 avatar display)
   useEffect(() => {
     try {
-      const sid = localStorage.getItem(SESSION_KEY);
+      const lastUid = localStorage.getItem(LAST_USER_KEY);
       const pinHash = localStorage.getItem(PIN_KEY);
-      if (sid && pinHash) {
-        const u = getUserById(sid);
+      if (lastUid && pinHash) {
+        const u = getUserById(lastUid);
         if (u) {
           setSavedUser({
             firstName: u.firstName,
@@ -158,15 +159,13 @@ export default function SplashPage() {
     if (stage !== 2) return;
     const t = setTimeout(() => {
       try {
-        const sid = localStorage.getItem(SESSION_KEY);
+        const lastUid = localStorage.getItem(LAST_USER_KEY);
         const pinHash = localStorage.getItem(PIN_KEY);
-        if (sid && pinHash) {
-          const u = getUserById(sid);
-          if (u) {
-            navigate(3);
-            return;
-          }
+        if (lastUid && pinHash && getUserById(lastUid)) {
+          navigate(3);
+          return;
         }
+        const sid = localStorage.getItem(SESSION_KEY);
         navigate(sid ? "/dashboard" : "/login");
       } catch {
         navigate("/login");
@@ -184,6 +183,9 @@ export default function SplashPage() {
       const storedHash = localStorage.getItem(PIN_KEY);
       const enteredHash = hashPassword(pin);
       if (storedHash === enteredHash) {
+        // Restore the active session so AuthContext recognises the user
+        const lastUid = localStorage.getItem(LAST_USER_KEY);
+        if (lastUid) localStorage.setItem(SESSION_KEY, lastUid);
         navigate("/dashboard");
       } else {
         setPinShake(true);
@@ -415,6 +417,7 @@ export default function SplashPage() {
               try {
                 localStorage.removeItem(PIN_KEY);
                 localStorage.removeItem(SESSION_KEY);
+                localStorage.removeItem(LAST_USER_KEY);
               } catch { /**/ }
               router.replace("/login");
             }}

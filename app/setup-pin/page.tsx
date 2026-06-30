@@ -109,6 +109,9 @@ export default function SetupPinPage() {
         // PINs match — save and finish
         try {
           localStorage.setItem(PIN_KEY, hashPassword(pin));
+          // Persist last user so splash shows PIN screen on future launches
+          const sid = localStorage.getItem("wf_session");
+          if (sid) localStorage.setItem("wf_last_user", sid);
         } catch { /* ignore */ }
         setStep("done");
         setBusy(false);
