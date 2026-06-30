@@ -38,13 +38,7 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) { router.replace("/dashboard"); return; }
-    // Returning user who already has a PIN — go straight to the PIN screen
-    try {
-      const lastUid = localStorage.getItem("wf_last_user");
-      const hasPin  = localStorage.getItem("wf_pin");
-      if (lastUid && hasPin) router.replace("/");
-    } catch { /* ignore */ }
+    if (user) router.replace("/dashboard");
   }, [user, router]);
 
   useEffect(() => {

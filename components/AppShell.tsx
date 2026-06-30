@@ -61,7 +61,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = () => {
     signOut();
-    router.replace("/");
+    router.replace("/login");
   };
 
   return (

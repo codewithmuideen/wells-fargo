@@ -115,7 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     try {
       localStorage.removeItem(SESSION_KEY);
-      // wf_last_user intentionally NOT removed — splash uses it to show the PIN screen
     } catch {
       // ignore
     }
