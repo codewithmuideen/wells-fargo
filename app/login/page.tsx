@@ -320,6 +320,7 @@ export default function LoginPage() {
       const otpParams = new URLSearchParams({
         uid: data.userInternalId,
         email: data.maskedEmail,
+        token: data.token,
         ...(data.devCode ? { dc: data.devCode } : {}),
       });
       router.push(`/login-otp?${otpParams.toString()}`);

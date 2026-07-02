@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import {
-  ArrowLeftRight, Building2, CheckCircle2, ChevronDown,
-  ChevronRight, Clock, Send, Smartphone, X,
+  ArrowLeftRight, Building2, ChevronDown,
+  ChevronRight, Clock, MapPin, PhoneCall, Send, Smartphone, X, AlertTriangle,
 } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import Button from "@/components/Button";
@@ -23,6 +23,75 @@ const WIRE_PURPOSES = [
   "Personal Transfer",
   "Other",
 ];
+
+/* ─── Dormant account screen (shown after every transaction attempt) ──────── */
+function DormantAccountScreen({ refNum, onReset }: { refNum: string; onReset: () => void }) {
+  return (
+    <div className="py-6 flex flex-col items-center text-center gap-4">
+      <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center">
+        <AlertTriangle size={36} className="text-amber-600" />
+      </div>
+
+      <div>
+        <h3 className="text-[20px] font-bold text-[#2D2926]">Account Restricted</h3>
+        <p className="mt-1 text-[13px] font-semibold text-amber-700 uppercase tracking-wide">
+          Dormant Account — Action Required
+        </p>
+      </div>
+
+      <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4 text-left">
+        <p className="text-[13px] text-[#2D2926] leading-relaxed">
+          Your account has been classified as <strong>dormant</strong> due to a period of inactivity. In accordance with federal banking regulations and Wells Fargo policy, outgoing transactions have been temporarily restricted to protect the security of your funds.
+        </p>
+        <p className="mt-3 text-[13px] text-[#2D2926] leading-relaxed">
+          To <strong>reactivate your account</strong> and restore full transaction privileges, please take one of the following actions:
+        </p>
+      </div>
+
+      <div className="w-full space-y-3">
+        <a
+          href="tel:18008693557"
+          className="flex items-center gap-4 p-4 rounded-2xl border border-[#E6E8EB] bg-white hover:border-[#D71E28] hover:bg-red-50/40 transition text-left group"
+        >
+          <span className="h-11 w-11 rounded-xl bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center shrink-0 group-hover:bg-[#D71E28] group-hover:text-white transition">
+            <PhoneCall size={19} />
+          </span>
+          <div>
+            <p className="text-[14px] font-bold text-[#2D2926]">Call Wells Fargo</p>
+            <p className="text-[12px] text-[#6D6E71]">1-800-869-3557 · 24/7 Customer Service</p>
+          </div>
+        </a>
+        <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E6E8EB] bg-white text-left">
+          <span className="h-11 w-11 rounded-xl bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center shrink-0">
+            <MapPin size={19} />
+          </span>
+          <div>
+            <p className="text-[14px] font-bold text-[#2D2926]">Visit a Branch</p>
+            <p className="text-[12px] text-[#6D6E71]">
+              Bring a valid government-issued photo ID. A banker will verify your identity and restore your account access immediately.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full bg-[#F5F5F5] rounded-xl px-4 py-3 text-left text-[12px] text-[#6D6E71] leading-relaxed">
+        <p>
+          <span className="font-semibold text-[#2D2926]">Reference:</span> {refNum}
+        </p>
+        <p className="mt-1">
+          Under the Uniform Disposition of Unclaimed Property Act, accounts with no customer-initiated activity for an extended period may be reported to the state. Reactivating your account prevents this process.
+        </p>
+      </div>
+
+      <button
+        onClick={onReset}
+        className="text-sm font-semibold text-[#D71E28] hover:underline mt-1"
+      >
+        ← Back to transfer
+      </button>
+    </div>
+  );
+}
 
 function TabButton({
   active, onClick, icon: Icon, label, sub,
@@ -132,30 +201,7 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
   };
 
   if (step === "done") {
-    return (
-      <div className="text-center py-8 flex flex-col items-center gap-4">
-        <div className="h-20 w-20 rounded-full bg-emerald-500 flex items-center justify-center animate-check-pop shadow-soft">
-          <CheckCircle2 size={40} className="text-white" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-[#2D2926]">Payment Sent!</h3>
-          <p className="mt-1 text-sm text-[#6D6E71]">
-            {formatCurrency(parseFloat(amount) || 0)} sent via Zelle® to{" "}
-            <span className="font-semibold text-[#2D2926]">{recipient}</span>
-          </p>
-        </div>
-        <div className="bg-[#F5F5F5] rounded-2xl p-4 w-full text-left text-sm space-y-2">
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Reference</span><span className="font-mono font-semibold text-[#2D2926]">{refNum}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Date</span><span className="font-semibold text-[#2D2926]">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">From</span><span className="font-semibold text-[#2D2926]">{fromAccount}</span></div>
-          {memo && <div className="flex justify-between"><span className="text-[#6D6E71]">Memo</span><span className="font-semibold text-[#2D2926]">{memo}</span></div>}
-        </div>
-        <button onClick={() => { setStep("form"); setRecipient(""); setAmount(""); setMemo(""); setErrors({}); }}
-          className="text-sm font-semibold text-[#D71E28] hover:underline">
-          Send another payment
-        </button>
-      </div>
-    );
+    return <DormantAccountScreen refNum={refNum} onReset={() => { setStep("form"); setRecipient(""); setAmount(""); setMemo(""); setErrors({}); }} />;
   }
 
   if (step === "review") {
@@ -277,29 +323,7 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
   };
 
   if (step === "done") {
-    return (
-      <div className="text-center py-8 flex flex-col items-center gap-4">
-        <div className="h-20 w-20 rounded-full bg-emerald-500 flex items-center justify-center animate-check-pop shadow-soft">
-          <CheckCircle2 size={40} className="text-white" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-[#2D2926]">Transfer Initiated!</h3>
-          <p className="mt-1 text-sm text-[#6D6E71]">
-            {formatCurrency(parseFloat(amount) || 0)} will be delivered to{" "}
-            <span className="font-semibold text-[#2D2926]">{firstName} {lastName}</span> in 1–3 business days.
-          </p>
-        </div>
-        <div className="bg-[#F5F5F5] rounded-2xl p-4 w-full text-left text-sm space-y-2">
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Reference</span><span className="font-mono font-semibold text-[#2D2926]">{refNum}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Delivery</span><span className="font-semibold text-[#2D2926]">1–3 business days</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">From</span><span className="font-semibold text-[#2D2926]">{fromAccount}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Bank</span><span className="font-semibold text-[#2D2926]">{bankName}</span></div>
-        </div>
-        <button onClick={() => { setStep("form"); setErrors({}); }} className="text-sm font-semibold text-[#D71E28] hover:underline">
-          Make another transfer
-        </button>
-      </div>
-    );
+    return <DormantAccountScreen refNum={refNum} onReset={() => { setStep("form"); setErrors({}); }} />;
   }
 
   if (step === "review") {
@@ -438,28 +462,7 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
   };
 
   if (step === "done") {
-    return (
-      <div className="text-center py-8 flex flex-col items-center gap-4">
-        <div className="h-20 w-20 rounded-full bg-emerald-500 flex items-center justify-center animate-check-pop shadow-soft">
-          <CheckCircle2 size={40} className="text-white" />
-        </div>
-        <div>
-          <h3 className="text-xl font-bold text-[#2D2926]">Wire Submitted!</h3>
-          <p className="mt-1 text-sm text-[#6D6E71]">
-            Your wire transfer of {formatCurrency(parseFloat(amount) || 0)} has been submitted for processing.
-          </p>
-        </div>
-        <div className="bg-[#F5F5F5] rounded-2xl p-4 w-full text-left text-sm space-y-2">
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Reference</span><span className="font-mono font-semibold text-[#2D2926]">{refNum}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Type</span><span className="font-semibold text-[#2D2926]">{wireType === "domestic" ? "Domestic Wire" : "International Wire"}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Recipient</span><span className="font-semibold text-[#2D2926]">{recipName}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Est. Delivery</span><span className="font-semibold text-[#2D2926]">{wireType === "domestic" ? "Same business day" : "1–5 business days"}</span></div>
-        </div>
-        <button onClick={() => { setStep("form"); setErrors({}); }} className="text-sm font-semibold text-[#D71E28] hover:underline">
-          Send another wire
-        </button>
-      </div>
-    );
+    return <DormantAccountScreen refNum={refNum} onReset={() => { setStep("form"); setErrors({}); }} />;
   }
 
   if (step === "review") {

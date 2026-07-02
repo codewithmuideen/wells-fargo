@@ -16,8 +16,9 @@ function LoginOtpInner() {
   const { signInById } = useAuth();
 
   const userInternalId = params.get("uid") ?? "";
-  const maskedEmail = params.get("email") ?? "";
-  const devCode = params.get("dc") ?? null;
+  const maskedEmail    = params.get("email") ?? "";
+  const devCode        = params.get("dc") ?? null;
+  const [otpToken, setOtpToken] = useState(params.get("token") ?? "");
 
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ function LoginOtpInner() {
         const res = await fetch("/api/verify-login-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userInternalId, code: value }),
+          body: JSON.stringify({ token: otpToken, code: value }),
         });
         const data = await res.json();
 
@@ -83,7 +84,7 @@ function LoginOtpInner() {
         setCode("");
       }
     },
-    [userInternalId, signInById, router]
+    [otpToken, userInternalId, signInById, router]
   );
 
   const handleResend = async () => {
@@ -103,6 +104,9 @@ function LoginOtpInner() {
         setError("Couldn't resend the code. Please sign on again.");
         return;
       }
+
+      // Update token so the new OTP can be verified without a page reload
+      if (data.token) setOtpToken(data.token);
 
       setError(null);
       setInfoMessage("A new verification code has been sent to your email.");

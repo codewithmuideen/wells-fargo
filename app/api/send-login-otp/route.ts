@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { PREDEFINED_USERS } from "@/lib/data";
 import { generateOtp } from "@/lib/registration";
-import otpStore from "@/lib/otp-store";
+import { createOtpToken } from "@/lib/otp-token";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -18,11 +18,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "User not found." }, { status: 404 });
   }
 
-  const code = generateOtp();
-  const expires = Date.now() + 10 * 60 * 1000;
-  otpStore.set(user.id, { code, expires });
+  const code      = generateOtp();
+  const expiresAt = Date.now() + 10 * 60 * 1000;
 
-  // Always log to server console so OTP is accessible even if email fails
+  // Stateless token — no shared in-memory store needed across serverless instances
+  const token = await createOtpToken(code, user.id, expiresAt);
+
+  // Always log to server console so OTP is visible in Vercel function logs
   console.log(`[WF OTP] Code for ${user.firstName} (${user.email}): ${code}`);
 
   let emailSent = false;
@@ -62,7 +64,7 @@ export async function POST(req: NextRequest) {
     });
     emailSent = true;
   } catch {
-    console.error(`[WF OTP] Email delivery failed for ${user.email} — code is still valid`);
+    console.error(`[WF OTP] Email delivery failed for ${user.email} — token still valid`);
   }
 
   const masked = user.email.replace(
@@ -74,7 +76,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     maskedEmail: masked,
     userInternalId: user.id,
-    // Include code in response when email didn't send so user can still log in
+    token,
     ...(emailSent ? {} : { devCode: code }),
   });
 }

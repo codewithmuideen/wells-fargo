@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, DollarSign, Plus, Receipt, X } from "lucide-react";
+import { AlertTriangle, DollarSign, MapPin, PhoneCall, Plus, Receipt, X } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import Button from "@/components/Button";
 import PinModal from "@/components/PinModal";
@@ -39,21 +39,41 @@ function PayModal({ payee, onClose }: { payee: Payee; onClose: () => void }) {
 
   if (step === "done") {
     return (
-      <div className="px-6 py-8 flex flex-col items-center text-center">
-        <div className="h-20 w-20 rounded-full bg-emerald-500 flex items-center justify-center animate-check-pop">
-          <CheckCircle2 size={40} className="text-white" />
+      <div className="px-6 py-6 flex flex-col items-center text-center gap-4">
+        <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center">
+          <AlertTriangle size={36} className="text-amber-600" />
         </div>
-        <h3 className="mt-5 text-xl font-bold text-[#2D2926]">Payment Scheduled!</h3>
-        <p className="mt-2 text-[14px] text-[#6D6E71] leading-relaxed">
-          {formatCurrency(parseFloat(amount))} payment to <span className="font-semibold text-[#2D2926]">{payee.name}</span> has been scheduled.
-        </p>
-        <div className="mt-4 w-full bg-[#F5F5F5] rounded-2xl p-4 text-left text-sm space-y-2">
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Reference</span><span className="font-mono font-semibold text-[#2D2926]">{refNum}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Payee</span><span className="font-semibold text-[#2D2926]">{payee.name}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Amount</span><span className="font-semibold text-[#2D2926]">{formatCurrency(parseFloat(amount))}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Date</span><span className="font-semibold text-[#2D2926]">{new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span></div>
+        <div>
+          <h3 className="text-[19px] font-bold text-[#2D2926]">Account Restricted</h3>
+          <p className="mt-0.5 text-[12px] font-semibold text-amber-700 uppercase tracking-wide">
+            Dormant Account — Action Required
+          </p>
         </div>
-        <Button variant="primary" fullWidth size="lg" className="mt-5" onClick={onClose}>Done</Button>
+        <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 text-left">
+          <p className="text-[13px] text-[#2D2926] leading-relaxed">
+            Your account has been classified as <strong>dormant</strong> due to inactivity. Bill payments have been temporarily restricted to protect your funds. To restore payment access, please take one of the actions below.
+          </p>
+        </div>
+        <div className="w-full space-y-3">
+          <a href="tel:18008693557"
+            className="flex items-center gap-4 p-4 rounded-2xl border border-[#E6E8EB] bg-white hover:border-[#D71E28] hover:bg-red-50/40 transition text-left group">
+            <span className="h-10 w-10 rounded-xl bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center shrink-0 group-hover:bg-[#D71E28] group-hover:text-white transition">
+              <PhoneCall size={18} />
+            </span>
+            <div>
+              <p className="text-[13px] font-bold text-[#2D2926]">Call Wells Fargo</p>
+              <p className="text-[11px] text-[#6D6E71]">1-800-869-3557 · Available 24/7</p>
+            </div>
+          </a>
+          <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E6E8EB] bg-white text-left">
+            <span className="h-10 w-10 rounded-xl bg-[#D71E28]/10 text-[#D71E28] flex items-center justify-center shrink-0">
+              <MapPin size={18} />
+            </span>
+            <p className="text-[13px] text-[#2D2926]">Visit a branch with a valid government-issued photo ID to reactivate your account.</p>
+          </div>
+        </div>
+        <p className="text-[11px] text-[#9AA0A6]">Reference: {refNum}</p>
+        <Button variant="primary" fullWidth onClick={onClose}>Close</Button>
       </div>
     );
   }
