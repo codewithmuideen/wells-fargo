@@ -130,15 +130,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-[#E6E8EB]">
               <div className="flex items-center gap-3 min-w-0">
                 {user.avatar ? (
-                  <Image
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={user.avatar}
                     alt={user.firstName}
-                    width={44}
-                    height={44}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; (e.currentTarget.nextSibling as HTMLElement)?.removeAttribute("hidden"); }}
                     className="h-11 w-11 rounded-full object-cover shrink-0"
                   />
-                ) : (
-                  <div className="h-11 w-11 rounded-full bg-[#D71E28] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                ) : null}
+                {(!user.avatar) && (
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[#D71E28] to-[#7A1218] text-white flex items-center justify-center font-bold text-sm shrink-0">
                     {(user.firstName[0] ?? "") + (user.lastName[0] ?? "")}
                   </div>
                 )}

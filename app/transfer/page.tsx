@@ -25,17 +25,9 @@ const WIRE_PURPOSES = [
 ];
 
 function TabButton({
-  active,
-  onClick,
-  icon: Icon,
-  label,
-  sub,
+  active, onClick, icon: Icon, label, sub,
 }: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ElementType;
-  label: string;
-  sub: string;
+  active: boolean; onClick: () => void; icon: React.ElementType; label: string; sub: string;
 }) {
   return (
     <button
@@ -48,72 +40,60 @@ function TabButton({
       }`}
     >
       <Icon size={18} className={active ? "text-white" : "text-[#D71E28]"} />
-      <span className={`text-[12px] font-bold leading-tight ${active ? "text-white" : "text-[#2D2926]"}`}>
-        {label}
-      </span>
-      <span className={`text-[10px] leading-tight ${active ? "text-white/75" : "text-[#9AA0A6]"}`}>
-        {sub}
-      </span>
+      <span className={`text-[12px] font-bold leading-tight ${active ? "text-white" : "text-[#2D2926]"}`}>{label}</span>
+      <span className={`text-[10px] leading-tight ${active ? "text-white/75" : "text-[#9AA0A6]"}`}>{sub}</span>
     </button>
   );
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="block text-[13px] font-semibold text-[#2D2926] mb-1.5">
-      {children}
+      {children}{required && <span className="text-[#D71E28] ml-0.5">*</span>}
     </label>
   );
 }
 
 function Input({
-  placeholder,
-  value,
-  onChange,
-  type = "text",
-  inputMode,
-  maxLength,
-  prefix,
-  readOnly,
+  placeholder, value, onChange, type = "text", inputMode,
+  maxLength, prefix, readOnly, error,
 }: {
-  placeholder?: string;
-  value: string;
-  onChange?: (v: string) => void;
-  type?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  maxLength?: number;
-  prefix?: string;
-  readOnly?: boolean;
+  placeholder?: string; value: string; onChange?: (v: string) => void;
+  type?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number; prefix?: string; readOnly?: boolean; error?: string;
 }) {
   return (
-    <div className="relative">
-      {prefix && (
-        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D6E71] text-sm font-medium select-none">
-          {prefix}
-        </span>
-      )}
-      <input
-        type={type}
-        inputMode={inputMode}
-        placeholder={placeholder}
-        value={value}
-        maxLength={maxLength}
-        readOnly={readOnly}
-        onChange={(e) => onChange?.(e.target.value)}
-        className={`w-full ${prefix ? "pl-7" : "pl-3.5"} pr-3.5 py-3 rounded-xl border border-[#E6E8EB] bg-[#FAFAFA] text-sm text-[#2D2926] placeholder-[#B0B4BA] focus:border-[#D71E28] focus:outline-none focus:ring-2 focus:ring-[#D71E28]/15 transition ${readOnly ? "opacity-70 cursor-not-allowed" : ""}`}
-      />
+    <div>
+      <div className="relative">
+        {prefix && (
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6D6E71] text-sm font-medium select-none">
+            {prefix}
+          </span>
+        )}
+        <input
+          type={type}
+          inputMode={inputMode}
+          placeholder={placeholder}
+          value={value}
+          maxLength={maxLength}
+          readOnly={readOnly}
+          onChange={(e) => onChange?.(e.target.value)}
+          className={`w-full ${prefix ? "pl-7" : "pl-3.5"} pr-3.5 py-3 rounded-xl border bg-[#FAFAFA] text-sm text-[#2D2926] placeholder-[#B0B4BA] focus:outline-none focus:ring-2 transition ${
+            error
+              ? "border-red-400 focus:border-red-500 focus:ring-red-100"
+              : "border-[#E6E8EB] focus:border-[#D71E28] focus:ring-[#D71E28]/15"
+          } ${readOnly ? "opacity-70 cursor-not-allowed" : ""}`}
+        />
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600 font-medium">{error}</p>}
     </div>
   );
 }
 
 function Select({
-  value,
-  onChange,
-  options,
+  value, onChange, options,
 }: {
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
+  value: string; onChange: (v: string) => void; options: string[];
 }) {
   return (
     <div className="relative">
@@ -122,11 +102,7 @@ function Select({
         onChange={(e) => onChange(e.target.value)}
         className="w-full pl-3.5 pr-9 py-3 rounded-xl border border-[#E6E8EB] bg-[#FAFAFA] text-sm text-[#2D2926] focus:border-[#D71E28] focus:outline-none focus:ring-2 focus:ring-[#D71E28]/15 appearance-none transition"
       >
-        {options.map((o) => (
-          <option key={o} value={o}>
-            {o}
-          </option>
-        ))}
+        {options.map((o) => <option key={o} value={o}>{o}</option>)}
       </select>
       <ChevronDown size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9AA0A6] pointer-events-none" />
     </div>
@@ -140,7 +116,20 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
   const [memo, setMemo]           = useState("");
   const [step, setStep]           = useState<"form" | "review" | "done">("form");
   const [showPin, setShowPin]     = useState(false);
+  const [errors, setErrors]       = useState<Record<string, string>>({});
   const refNum = `ZEL${Date.now().toString().slice(-8)}`;
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!recipient.trim()) e.recipient = "Please enter a recipient name, email, or US mobile number.";
+    if (!amount || parseFloat(amount) <= 0) e.amount = "Please enter a valid amount greater than $0.00.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const clearError = (key: string) => {
+    if (errors[key]) setErrors((p) => { const c = { ...p }; delete c[key]; return c; });
+  };
 
   if (step === "done") {
     return (
@@ -161,7 +150,7 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
           <div className="flex justify-between"><span className="text-[#6D6E71]">From</span><span className="font-semibold text-[#2D2926]">{fromAccount}</span></div>
           {memo && <div className="flex justify-between"><span className="text-[#6D6E71]">Memo</span><span className="font-semibold text-[#2D2926]">{memo}</span></div>}
         </div>
-        <button onClick={() => { setStep("form"); setRecipient(""); setAmount(""); setMemo(""); }}
+        <button onClick={() => { setStep("form"); setRecipient(""); setAmount(""); setMemo(""); setErrors({}); }}
           className="text-sm font-semibold text-[#D71E28] hover:underline">
           Send another payment
         </button>
@@ -215,14 +204,29 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
   }
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (recipient && amount) setStep("review"); }} className="space-y-4">
+    <form
+      onSubmit={(e) => { e.preventDefault(); if (validate()) setStep("review"); }}
+      className="space-y-4"
+    >
       <div>
-        <FieldLabel>To (name, email, or US mobile)</FieldLabel>
-        <Input placeholder="e.g. Jane Smith or jane@email.com" value={recipient} onChange={setRecipient} />
+        <FieldLabel required>To (name, email, or US mobile)</FieldLabel>
+        <Input
+          placeholder="e.g. Jane Smith or jane@email.com"
+          value={recipient}
+          onChange={(v) => { setRecipient(v); clearError("recipient"); }}
+          error={errors.recipient}
+        />
       </div>
       <div>
-        <FieldLabel>Amount</FieldLabel>
-        <Input placeholder="0.00" value={amount} onChange={(v) => setAmount(v.replace(/[^0-9.]/g, ""))} inputMode="decimal" prefix="$" />
+        <FieldLabel required>Amount</FieldLabel>
+        <Input
+          placeholder="0.00"
+          value={amount}
+          onChange={(v) => { setAmount(v.replace(/[^0-9.]/g, "")); clearError("amount"); }}
+          inputMode="decimal"
+          prefix="$"
+          error={errors.amount}
+        />
       </div>
       <div>
         <FieldLabel>Memo (optional)</FieldLabel>
@@ -243,17 +247,34 @@ function ZelleForm({ fromAccount }: { fromAccount: string }) {
 
 /* ─── Bank Transfer Form ─────────────────────────────────────────────────── */
 function BankTransferForm({ fromAccount }: { fromAccount: string }) {
-  const [firstName,    setFirstName]    = useState("");
-  const [lastName,     setLastName]     = useState("");
-  const [bankName,     setBankName]     = useState("");
-  const [accountNum,   setAccountNum]   = useState("");
-  const [routingNum,   setRoutingNum]   = useState("");
-  const [accountType,  setAccountType]  = useState("Checking");
-  const [amount,       setAmount]       = useState("");
-  const [memo,         setMemo]         = useState("");
-  const [step,         setStep]         = useState<"form" | "review" | "done">("form");
-  const [showPin,      setShowPin]      = useState(false);
+  const [firstName,   setFirstName]   = useState("");
+  const [lastName,    setLastName]    = useState("");
+  const [bankName,    setBankName]    = useState("");
+  const [accountNum,  setAccountNum]  = useState("");
+  const [routingNum,  setRoutingNum]  = useState("");
+  const [accountType, setAccountType] = useState("Checking");
+  const [amount,      setAmount]      = useState("");
+  const [memo,        setMemo]        = useState("");
+  const [step,        setStep]        = useState<"form" | "review" | "done">("form");
+  const [showPin,     setShowPin]     = useState(false);
+  const [errors,      setErrors]      = useState<Record<string, string>>({});
   const refNum = `ACH${Date.now().toString().slice(-9)}`;
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!firstName.trim()) e.firstName = "First name is required.";
+    if (!lastName.trim())  e.lastName  = "Last name is required.";
+    if (!bankName.trim())  e.bankName  = "Recipient's bank name is required.";
+    if (!accountNum)       e.accountNum = "Account number is required.";
+    if (!routingNum || routingNum.length !== 9) e.routingNum = "Please enter a valid 9-digit ABA routing number.";
+    if (!amount || parseFloat(amount) <= 0)     e.amount     = "Please enter a valid amount greater than $0.00.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const clearError = (key: string) => {
+    if (errors[key]) setErrors((p) => { const c = { ...p }; delete c[key]; return c; });
+  };
 
   if (step === "done") {
     return (
@@ -274,7 +295,7 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
           <div className="flex justify-between"><span className="text-[#6D6E71]">From</span><span className="font-semibold text-[#2D2926]">{fromAccount}</span></div>
           <div className="flex justify-between"><span className="text-[#6D6E71]">Bank</span><span className="font-semibold text-[#2D2926]">{bankName}</span></div>
         </div>
-        <button onClick={() => setStep("form")} className="text-sm font-semibold text-[#D71E28] hover:underline">
+        <button onClick={() => { setStep("form"); setErrors({}); }} className="text-sm font-semibold text-[#D71E28] hover:underline">
           Make another transfer
         </button>
       </div>
@@ -287,14 +308,14 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
         <h3 className="text-base font-bold text-[#2D2926]">Review ACH Transfer</h3>
         <div className="bg-[#FAFAFA] rounded-2xl border border-[#E6E8EB] divide-y divide-[#E6E8EB] text-sm">
           {[
-            ["Recipient",    `${firstName} ${lastName}`],
-            ["Bank",         bankName],
-            ["Account",      `••••${accountNum.slice(-4)} (${accountType})`],
-            ["Routing #",    routingNum],
-            ["Amount",       formatCurrency(parseFloat(amount) || 0)],
-            ["From",         fromAccount],
-            ["Delivery",     "1–3 Business Days"],
-            ["Memo",         memo || "—"],
+            ["Recipient",  `${firstName} ${lastName}`],
+            ["Bank",        bankName],
+            ["Account",     `••••${accountNum.slice(-4)} (${accountType})`],
+            ["Routing #",   routingNum],
+            ["Amount",      formatCurrency(parseFloat(amount) || 0)],
+            ["From",        fromAccount],
+            ["Delivery",    "1–3 Business Days"],
+            ["Memo",        memo || "—"],
           ].map(([k, v]) => (
             <div key={k} className="flex justify-between px-4 py-3">
               <span className="text-[#6D6E71]">{k}</span>
@@ -325,37 +346,45 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
   }
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (firstName && lastName && bankName && accountNum && routingNum && amount) setStep("review"); }} className="space-y-4">
-      {/* Recipient */}
+    <form onSubmit={(e) => { e.preventDefault(); if (validate()) setStep("review"); }} className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <FieldLabel>First Name</FieldLabel>
-          <Input placeholder="First name" value={firstName} onChange={setFirstName} />
+          <FieldLabel required>First Name</FieldLabel>
+          <Input placeholder="First name" value={firstName}
+            onChange={(v) => { setFirstName(v); clearError("firstName"); }} error={errors.firstName} />
         </div>
         <div>
-          <FieldLabel>Last Name</FieldLabel>
-          <Input placeholder="Last name" value={lastName} onChange={setLastName} />
+          <FieldLabel required>Last Name</FieldLabel>
+          <Input placeholder="Last name" value={lastName}
+            onChange={(v) => { setLastName(v); clearError("lastName"); }} error={errors.lastName} />
         </div>
       </div>
       <div>
-        <FieldLabel>Recipient&apos;s Bank Name</FieldLabel>
-        <Input placeholder="e.g. Chase Bank, Bank of America" value={bankName} onChange={setBankName} />
+        <FieldLabel required>Recipient&apos;s Bank Name</FieldLabel>
+        <Input placeholder="e.g. Chase Bank, Bank of America" value={bankName}
+          onChange={(v) => { setBankName(v); clearError("bankName"); }} error={errors.bankName} />
       </div>
       <div>
-        <FieldLabel>Account Number</FieldLabel>
-        <Input placeholder="Account number" value={accountNum} onChange={(v) => setAccountNum(v.replace(/\D/g, ""))} inputMode="numeric" maxLength={17} />
+        <FieldLabel required>Account Number</FieldLabel>
+        <Input placeholder="Account number" value={accountNum}
+          onChange={(v) => { setAccountNum(v.replace(/\D/g, "")); clearError("accountNum"); }}
+          inputMode="numeric" maxLength={17} error={errors.accountNum} />
       </div>
       <div>
-        <FieldLabel>Routing Number (9 digits)</FieldLabel>
-        <Input placeholder="9-digit ABA routing number" value={routingNum} onChange={(v) => setRoutingNum(v.replace(/\D/g, ""))} inputMode="numeric" maxLength={9} />
+        <FieldLabel required>Routing Number (9 digits)</FieldLabel>
+        <Input placeholder="9-digit ABA routing number" value={routingNum}
+          onChange={(v) => { setRoutingNum(v.replace(/\D/g, "")); clearError("routingNum"); }}
+          inputMode="numeric" maxLength={9} error={errors.routingNum} />
       </div>
       <div>
         <FieldLabel>Account Type</FieldLabel>
         <Select value={accountType} onChange={setAccountType} options={ACCOUNT_TYPES} />
       </div>
       <div>
-        <FieldLabel>Amount</FieldLabel>
-        <Input placeholder="0.00" value={amount} onChange={(v) => setAmount(v.replace(/[^0-9.]/g, ""))} inputMode="decimal" prefix="$" />
+        <FieldLabel required>Amount</FieldLabel>
+        <Input placeholder="0.00" value={amount}
+          onChange={(v) => { setAmount(v.replace(/[^0-9.]/g, "")); clearError("amount"); }}
+          inputMode="decimal" prefix="$" error={errors.amount} />
       </div>
       <div>
         <FieldLabel>Memo / Reference (optional)</FieldLabel>
@@ -376,17 +405,37 @@ function BankTransferForm({ fromAccount }: { fromAccount: string }) {
 
 /* ─── Wire Transfer Form ─────────────────────────────────────────────────── */
 function WireForm({ fromAccount }: { fromAccount: string }) {
-  const [wireType,    setWireType]    = useState<"domestic" | "international">("domestic");
-  const [recipName,   setRecipName]   = useState("");
-  const [bankName,    setBankName]    = useState("");
-  const [bankAddress, setBankAddress] = useState("");
-  const [accountNum,  setAccountNum]  = useState("");
+  const [wireType,     setWireType]     = useState<"domestic" | "international">("domestic");
+  const [recipName,    setRecipName]    = useState("");
+  const [bankName,     setBankName]     = useState("");
+  const [bankAddress,  setBankAddress]  = useState("");
+  const [accountNum,   setAccountNum]   = useState("");
   const [routingSwift, setRoutingSwift] = useState("");
-  const [amount,      setAmount]      = useState("");
-  const [purpose,     setPurpose]     = useState(WIRE_PURPOSES[0]);
-  const [step,        setStep]        = useState<"form" | "review" | "done">("form");
-  const [showPin,     setShowPin]     = useState(false);
+  const [amount,       setAmount]       = useState("");
+  const [purpose,      setPurpose]      = useState(WIRE_PURPOSES[0]);
+  const [step,         setStep]         = useState<"form" | "review" | "done">("form");
+  const [showPin,      setShowPin]      = useState(false);
+  const [errors,       setErrors]       = useState<Record<string, string>>({});
   const refNum = `WRE${Date.now().toString().slice(-9)}`;
+
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!recipName.trim())    e.recipName    = "Recipient full name is required.";
+    if (!bankName.trim())     e.bankName     = "Recipient's bank name is required.";
+    if (!accountNum)          e.accountNum   = "Account number is required.";
+    if (!routingSwift.trim()) e.routingSwift = wireType === "domestic"
+      ? "Please enter a valid 9-digit ABA routing number."
+      : "SWIFT / BIC code is required.";
+    if (wireType === "domestic" && routingSwift.length > 0 && routingSwift.length !== 9)
+      e.routingSwift = "ABA routing number must be exactly 9 digits.";
+    if (!amount || parseFloat(amount) <= 0) e.amount = "Please enter a valid amount greater than $0.00.";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const clearError = (key: string) => {
+    if (errors[key]) setErrors((p) => { const c = { ...p }; delete c[key]; return c; });
+  };
 
   if (step === "done") {
     return (
@@ -404,9 +453,9 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
           <div className="flex justify-between"><span className="text-[#6D6E71]">Reference</span><span className="font-mono font-semibold text-[#2D2926]">{refNum}</span></div>
           <div className="flex justify-between"><span className="text-[#6D6E71]">Type</span><span className="font-semibold text-[#2D2926]">{wireType === "domestic" ? "Domestic Wire" : "International Wire"}</span></div>
           <div className="flex justify-between"><span className="text-[#6D6E71]">Recipient</span><span className="font-semibold text-[#2D2926]">{recipName}</span></div>
-          <div className="flex justify-between"><span className="text-[#6D6E71]">Estimated Delivery</span><span className="font-semibold text-[#2D2926]">{wireType === "domestic" ? "Same business day" : "1–5 business days"}</span></div>
+          <div className="flex justify-between"><span className="text-[#6D6E71]">Est. Delivery</span><span className="font-semibold text-[#2D2926]">{wireType === "domestic" ? "Same business day" : "1–5 business days"}</span></div>
         </div>
-        <button onClick={() => setStep("form")} className="text-sm font-semibold text-[#D71E28] hover:underline">
+        <button onClick={() => { setStep("form"); setErrors({}); }} className="text-sm font-semibold text-[#D71E28] hover:underline">
           Send another wire
         </button>
       </div>
@@ -463,8 +512,7 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
   }
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); if (recipName && bankName && accountNum && routingSwift && amount) setStep("review"); }} className="space-y-4">
-      {/* Wire type toggle */}
+    <form onSubmit={(e) => { e.preventDefault(); if (validate()) setStep("review"); }} className="space-y-4">
       <div>
         <FieldLabel>Wire Type</FieldLabel>
         <div className="flex gap-2">
@@ -472,7 +520,7 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
             <button
               key={t}
               type="button"
-              onClick={() => setWireType(t)}
+              onClick={() => { setWireType(t); setRoutingSwift(""); clearError("routingSwift"); }}
               className={`flex-1 py-2.5 rounded-xl text-[13px] font-semibold border transition-all ${
                 wireType === t
                   ? "bg-[#D71E28] border-[#D71E28] text-white"
@@ -484,37 +532,46 @@ function WireForm({ fromAccount }: { fromAccount: string }) {
           ))}
         </div>
       </div>
-
       <div>
-        <FieldLabel>Recipient Full Name</FieldLabel>
-        <Input placeholder="Legal name as it appears on account" value={recipName} onChange={setRecipName} />
+        <FieldLabel required>Recipient Full Name</FieldLabel>
+        <Input placeholder="Legal name as it appears on account" value={recipName}
+          onChange={(v) => { setRecipName(v); clearError("recipName"); }} error={errors.recipName} />
       </div>
       <div>
-        <FieldLabel>Recipient&apos;s Bank Name</FieldLabel>
-        <Input placeholder="Full bank name" value={bankName} onChange={setBankName} />
+        <FieldLabel required>Recipient&apos;s Bank Name</FieldLabel>
+        <Input placeholder="Full bank name" value={bankName}
+          onChange={(v) => { setBankName(v); clearError("bankName"); }} error={errors.bankName} />
       </div>
       <div>
         <FieldLabel>Bank Address (optional)</FieldLabel>
         <Input placeholder="Street, City, State/Country" value={bankAddress} onChange={setBankAddress} />
       </div>
       <div>
-        <FieldLabel>Recipient Account Number</FieldLabel>
-        <Input placeholder="Account number" value={accountNum} onChange={(v) => setAccountNum(v.replace(/\D/g, ""))} inputMode="numeric" maxLength={18} />
+        <FieldLabel required>Recipient Account Number</FieldLabel>
+        <Input placeholder="Account number" value={accountNum}
+          onChange={(v) => { setAccountNum(v.replace(/\D/g, "")); clearError("accountNum"); }}
+          inputMode="numeric" maxLength={18} error={errors.accountNum} />
       </div>
       <div>
-        <FieldLabel>
+        <FieldLabel required>
           {wireType === "domestic" ? "ABA Routing Number (9 digits)" : "SWIFT / BIC Code"}
         </FieldLabel>
         <Input
           placeholder={wireType === "domestic" ? "9-digit routing number" : "SWIFT / BIC code"}
           value={routingSwift}
-          onChange={(v) => setRoutingSwift(wireType === "domestic" ? v.replace(/\D/g, "") : v.toUpperCase())}
+          onChange={(v) => {
+            setRoutingSwift(wireType === "domestic" ? v.replace(/\D/g, "") : v.toUpperCase());
+            clearError("routingSwift");
+          }}
           maxLength={wireType === "domestic" ? 9 : 11}
+          error={errors.routingSwift}
         />
       </div>
       <div>
-        <FieldLabel>Amount (USD)</FieldLabel>
-        <Input placeholder="0.00" value={amount} onChange={(v) => setAmount(v.replace(/[^0-9.]/g, ""))} inputMode="decimal" prefix="$" />
+        <FieldLabel required>Amount (USD)</FieldLabel>
+        <Input placeholder="0.00" value={amount}
+          onChange={(v) => { setAmount(v.replace(/[^0-9.]/g, "")); clearError("amount"); }}
+          inputMode="decimal" prefix="$" error={errors.amount} />
       </div>
       <div>
         <FieldLabel>Purpose of Wire</FieldLabel>
@@ -548,9 +605,7 @@ function TransferContent() {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-[#2D2926]">Pay &amp; Transfer</h1>
-      <p className="mt-1 text-sm text-[#6D6E71]">
-        Move money securely to anyone, anywhere.
-      </p>
+      <p className="mt-1 text-sm text-[#6D6E71]">Move money securely to anyone, anywhere.</p>
 
       {/* From account badge */}
       <div className="mt-4 flex items-center gap-3 bg-white rounded-2xl border border-[#E6E8EB] shadow-card px-4 py-3">

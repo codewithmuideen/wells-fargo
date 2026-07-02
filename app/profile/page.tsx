@@ -53,6 +53,7 @@ function Toggle({ label, description, defaultOn = false, icon: Icon }: {
 function ProfileContent() {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const [imgFailed, setImgFailed] = useState(false);
   if (!user) return null;
 
   const initials = `${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`;
@@ -68,9 +69,19 @@ function ProfileContent() {
 
       <div className="bg-white rounded-2xl shadow-card border border-[#E6E8EB] p-6 sm:p-8">
         <div className="flex items-center gap-5">
-          <div className="h-20 w-20 rounded-full bg-[#D71E28] text-white flex items-center justify-center text-2xl font-bold shrink-0">
-            {initials}
-          </div>
+          {user.avatar && !imgFailed ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={user.avatar}
+              alt={user.firstName}
+              onError={() => setImgFailed(true)}
+              className="h-20 w-20 rounded-full object-cover shrink-0 border-2 border-[#E6E8EB]"
+            />
+          ) : (
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#D71E28] to-[#7A1218] text-white flex items-center justify-center text-2xl font-bold shrink-0">
+              {initials}
+            </div>
+          )}
           <div className="min-w-0">
             <h2 className="text-xl font-semibold text-[#2D2926]">
               {user.firstName} {user.lastName}
@@ -128,7 +139,7 @@ function ProfileContent() {
           fullWidth
           onClick={() => {
             signOut();
-            router.replace("/");
+            router.replace("/login");
           }}
         >
           <LogOut size={16} /> Sign off
