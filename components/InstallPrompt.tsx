@@ -58,6 +58,15 @@ export default function InstallPrompt() {
       return () => clearTimeout(timer);
     }
 
+    // The inline script in layout.tsx captures the event before React hydrates
+    type WinWithBip = Window & { __bip?: BeforeInstallPromptEvent };
+    const early = (window as WinWithBip).__bip;
+    if (early) {
+      setDeferredPrompt(early);
+      return;
+    }
+
+    // Fallback: listen in case we get here before the event fires
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);

@@ -41,6 +41,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      {/* Capture beforeinstallprompt before React hydrates so InstallPrompt can pick it up */}
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__bip=e;});`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#F5F5F5] text-[#2D2926]">
         <AuthProvider>
           {children}
