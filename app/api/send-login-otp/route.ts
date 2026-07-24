@@ -24,50 +24,55 @@ export async function POST(req: NextRequest) {
   // Stateless token — no shared in-memory store needed across serverless instances
   const token = await createOtpToken(code, user.id, expiresAt);
 
-  // Always log to server console so OTP is visible in Vercel function logs
-  console.log(`[WF OTP] Code for ${user.firstName} (${user.email}): ${code}`);
+  // RESEND_TO_EMAIL overrides the recipient — required on Resend free tier
+  // because onboarding@resend.dev can only deliver to the account's verified email.
+  const toEmail = process.env.RESEND_TO_EMAIL ?? user.email;
 
-  let emailSent = false;
-  try {
-    await resend.emails.send({
-      from: "Wells Fargo <onboarding@resend.dev>",
-      to: user.email,
-      subject: `${code} is your Wells Fargo verification code`,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 0; border: 1px solid #E6E8EB; border-radius: 12px; overflow: hidden;">
-          <div style="background: #D71E28; padding: 24px; text-align: center;">
-            <h2 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: -0.3px;">Wells Fargo</h2>
-          </div>
-          <div style="padding: 32px 24px;">
-            <p style="color: #2D2926; font-size: 15px; line-height: 1.6; margin-top: 0;">
-              Hi ${user.firstName},
-            </p>
-            <p style="color: #6D6E71; font-size: 15px; line-height: 1.6;">
-              Your one-time verification code is:
-            </p>
-            <div style="text-align: center; margin: 28px 0;">
-              <span style="display: inline-block; background: #F5F5F5; border: 2px solid #E6E8EB; border-radius: 12px; padding: 16px 32px; font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #D71E28; font-family: monospace;">
-                ${code}
-              </span>
-            </div>
-            <p style="color: #6D6E71; font-size: 13px; line-height: 1.6;">
-              This code expires in <strong>10 minutes</strong>. If you did not request this code, please ignore this email or contact us immediately.
-            </p>
-            <hr style="border: none; border-top: 1px solid #E6E8EB; margin: 28px 0;" />
-            <p style="color: #9AA0A6; font-size: 11px; line-height: 1.5; text-align: center; margin-bottom: 0;">
-              Wells Fargo Bank, N.A. Member FDIC.<br />
-              Never share your verification code with anyone.
-            </p>
-          </div>
+  console.log(`[WF OTP] Sending code to ${toEmail} for user ${user.firstName}`);
+
+  const { error: sendError } = await resend.emails.send({
+    from: "Wells Fargo <onboarding@resend.dev>",
+    to: toEmail,
+    subject: `${code} is your Wells Fargo verification code`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 480px; margin: 0 auto; padding: 0; border: 1px solid #E6E8EB; border-radius: 12px; overflow: hidden;">
+        <div style="background: #D71E28; padding: 24px; text-align: center;">
+          <h2 style="color: #ffffff; margin: 0; font-size: 22px; letter-spacing: -0.3px;">Wells Fargo</h2>
         </div>
-      `,
-    });
-    emailSent = true;
-  } catch {
-    console.error(`[WF OTP] Email delivery failed for ${user.email} — token still valid`);
+        <div style="padding: 32px 24px;">
+          <p style="color: #2D2926; font-size: 15px; line-height: 1.6; margin-top: 0;">
+            Hi ${user.firstName},
+          </p>
+          <p style="color: #6D6E71; font-size: 15px; line-height: 1.6;">
+            Your one-time verification code is:
+          </p>
+          <div style="text-align: center; margin: 28px 0;">
+            <span style="display: inline-block; background: #F5F5F5; border: 2px solid #E6E8EB; border-radius: 12px; padding: 16px 32px; font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #D71E28; font-family: monospace;">
+              ${code}
+            </span>
+          </div>
+          <p style="color: #6D6E71; font-size: 13px; line-height: 1.6;">
+            This code expires in <strong>10 minutes</strong>. If you did not request this code, please ignore this email or contact us immediately.
+          </p>
+          <hr style="border: none; border-top: 1px solid #E6E8EB; margin: 28px 0;" />
+          <p style="color: #9AA0A6; font-size: 11px; line-height: 1.5; text-align: center; margin-bottom: 0;">
+            Wells Fargo Bank, N.A. Member FDIC.<br />
+            Never share your verification code with anyone.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+
+  if (sendError) {
+    console.error("[WF OTP] Resend error:", sendError);
+    return NextResponse.json(
+      { ok: false, error: "Failed to send email. Please try again." },
+      { status: 500 }
+    );
   }
 
-  const masked = user.email.replace(
+  const masked = toEmail.replace(
     /^(.{2})(.*)(@.*)$/,
     (_, a, b, c) => a + b.replace(/./g, "•") + c
   );
@@ -77,6 +82,5 @@ export async function POST(req: NextRequest) {
     maskedEmail: masked,
     userInternalId: user.id,
     token,
-    ...(emailSent ? {} : { devCode: code }),
   });
 }
